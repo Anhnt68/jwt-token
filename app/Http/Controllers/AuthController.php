@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Session;
 use Validator;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 
 class AuthController extends Controller
@@ -17,35 +18,69 @@ class AuthController extends Controller
      *
      * @return void
      */
-    public function __construct()
-    {
-        $this->middleware('auth:api', ['except' => ['login', 'register']]);
-    }
+    // public function __construct()
+    // {
+    //     $this->middleware('auth:api', ['except' => ['login', 'register','loginForm','registerForm']]);
+    // }
 
     /**
      * Get a JWT via given credentials.
      *
      * @return \Illuminate\Http\JsonResponse
      */
+
+    // $validator = Validator::make($request->all(), [
+    //     'email' => 'required|email',
+    //     'password' => 'required|string|min:6',
+    // ]);
+
+
+    // if ($validator->fails()) {
+    //     return response()->json($validator->errors(), 422);
+    // }
+
+    // if (!$token = auth()->attempt($validator->validated())) {
+    //     return response()->json(['error' => 'Unauthorized'], 401);
+    // }
+
+    // Session::put('access_token', $token);
+    // return $this->createNewToken($token);
+
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string|min:6',
-        ]);
+        $credentials = $request->only('email', 'password');
 
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $token = JWTAuth::fromUser($user);
+            // dd($token);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            // Lưu access token vào session
+            $cookie = \Cookie::make('access_token', $token, 60);
+            // dd($cookie);
+
+            return response()->json([
+                'status' => true,
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => JWTAuth::factory()->getTTL() * 60 // Thời gian hết hạn của token (đơn vị là giây)
+            ])->withCookie($cookie);
         }
 
-        if (!$token = auth()->attempt($validator->validated())) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
+        return response()->json([
+            'status' => false,
+            'message' => 'Invalid credentials',
+        ], 401);
+    }
 
-        Session::put('token', $token);
-        return $this->createNewToken($token);
+    public function loginForm()
+    {
+        return view('auth.login');
+    }
 
+    public function registerForm()
+    {
+        return view('auth.register');
     }
 
     /**
@@ -58,7 +93,7 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|between:2,100',
             'email' => 'required|string|email|max:100|unique:users',
-            'password' => 'required|string|confirmed|min:6',
+            'password' => 'required|string|min:6',
         ]);
 
         if ($validator->fails()) {
@@ -122,8 +157,7 @@ class AuthController extends Controller
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
-            'expires_in' => auth('api')->factory()->getTTL() * 60,
-            'user' => auth()->user()
+            'expires_in' => 6000,
         ]);
     }
 

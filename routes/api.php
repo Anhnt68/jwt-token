@@ -23,11 +23,12 @@ Route::group([
     'prefix' => 'auth'
 
 ], function ($router) {
-    Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login']);
-    Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register']);
+    // Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('loginPost');
+    // Route::get('/login', [\App\Http\Controllers\AuthController::class, 'loginForm'])->name('login');
+    // Route::get('/register', [\App\Http\Controllers\AuthController::class, 'registerForm'])->name('register');
+    // Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register'])->name('registerPost');
     Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout']);
     Route::post('/refresh', [\App\Http\Controllers\AuthController::class, 'refresh']);
     Route::get('/user-profile', [\App\Http\Controllers\AuthController::class, 'userProfile']);
     Route::post('/change-pass', [\App\Http\Controllers\AuthController::class, 'changePassWord']);
 });
-
